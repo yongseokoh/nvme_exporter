@@ -1,5 +1,6 @@
 import subprocess
 import json
+import nvme_simulation as nv_simul
 
 def print_nvme_list(json_data):
 
@@ -16,22 +17,28 @@ def print_nvme_list(json_data):
 		print('SectorSize %s' %device['SectorSize'])
 
 def get_nvme_list():
-	proc = subprocess.Popen("nvme list %s -o json",
-							shell=True,
-							stdout=subprocess.PIPE,
-							encoding='utf-8')
-	err = proc.wait()
+    if nv_simul.NVME_SIMULATION == 0:
 
-	(stdout, stderr) = proc.communicate()
+        proc = subprocess.Popen("nvme list %s -o json",
+                                shell=True,
+                                stdout=subprocess.PIPE,
+                                encoding='utf-8')
+        err = proc.wait()
 
-	json_data = json.loads(stdout)
+        (stdout, stderr) = proc.communicate()
+
+        json_data = json.loads(stdout)
+
+    else:
+        json_data = nv_simul.gen_simulation_nvme_list()
+
 
 	#print(type(json_data))
 	#print(json_data)
 
-	print_nvme_list(json_data)
+    print_nvme_list(json_data)
 
-	return json_data
+    return json_data
 
 if __name__ == '__main__':
 	nvme_list_json = get_nvme_list("/dev/nvme0")

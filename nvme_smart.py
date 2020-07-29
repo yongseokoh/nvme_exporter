@@ -1,5 +1,7 @@
 import subprocess
 import json
+from random import *
+import nvme_simulation as nv_simul
 
 def print_smart_log(json_data):
 
@@ -27,22 +29,25 @@ def print_smart_log(json_data):
 
 
 def get_smart_log(device_path):
-	proc = subprocess.Popen("nvme smart-log %s -o json" %device_path,
-							shell=True,
-							stdout=subprocess.PIPE,
-							encoding='utf-8')
-	err = proc.wait()
+    if nv_simul.NVME_SIMULATION == 0:
+        proc = subprocess.Popen("nvme smart-log %s -o json" %device_path,
+                                shell=True,
+                                stdout=subprocess.PIPE,
+                                encoding='utf-8')
+        err = proc.wait()
 
-	(stdout, stderr) = proc.communicate()
+        (stdout, stderr) = proc.communicate()
 
-	json_data = json.loads(stdout)
+        json_data = json.loads(stdout)
+    else:
+        json_data = nv_simul.gen_simulation_smart_log(0)
 
 	#print(type(json_data))
 	#print(json_data)
 
-	print_smart_log(json_data)
+    print_smart_log(json_data)
 
-	return json_data
+    return json_data
 
 if __name__ == '__main__':
 	smart_log_json = get_smart_log("/dev/nvme0")

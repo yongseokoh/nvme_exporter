@@ -2,6 +2,7 @@ from prometheus_client import start_http_server, Summary, Counter, Gauge, Histog
 from prometheus_client import Info
 import nvme_smart as ns
 import nvme_list as nl
+import nvme_simulation as nv_simul
 import random
 import time
 import json
@@ -35,7 +36,8 @@ def gather_nvme_smart_log(nvme_smart_gauge):
 
         device = nvme['DevicePath']
 
-        print('Device %s' %device)
+        print('\nDevice %s' %device)
+
         smart_json = ns.get_smart_log(device)
 
         nvme_smart_gauge['critical_warning'].labels(nvme['DevicePath']).set(smart_json['critical_warning'])
@@ -70,6 +72,10 @@ if __name__ == '__main__':
     # Start up the server to expose the metrics.
     start_http_server(8000)
     # Generate some requests.
+
+    if nv_simul.NVME_SIMULATION == 1:
+        nv_simul.init_nvme_devices()
+        #nv_simul.init_simulation_smart_log()
 
     nvme_list_json = nl.get_nvme_list()
     put_nvme_info()
