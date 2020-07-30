@@ -9,7 +9,7 @@ import json
 
 def init_nvme_smart_gauge():
     nvme_smart_gauge = dict()
-    nvme_smart_gauge['critical_warning']		= Gauge('nvme_smart_log_critical_warning'		,'nvme_smart_log_critical_warning'		 , ['device'])
+    nvme_smart_gauge['critical_warning']		= Gauge('nvme_smart_log_critical_warning'		,'nvme_smart_log_critical_warning'		 , ['device', 'critical_warning'])
     nvme_smart_gauge['temperature']				= Gauge('nvme_smart_log_temperature'			,'nvme_smart_log_temperature'			 , ['device'])
     nvme_smart_gauge['avail_spare']				= Gauge('nvme_smart_log_avail_spare'			,'nvme_smart_log_avail_spare'			 , ['device'])
     nvme_smart_gauge['spare_thresh']			= Gauge('nvme_smart_log_spare_thresh'			,'nvme_smart_log_spare_thresh'			 , ['device'])
@@ -40,7 +40,38 @@ def gather_nvme_smart_log(nvme_smart_gauge):
 
         smart_json = ns.get_smart_log(device)
 
-        nvme_smart_gauge['critical_warning'].labels(nvme['DevicePath']).set(smart_json['critical_warning'])
+        if smart_json['critical_warning'] & 1:
+            nvme_smart_gauge['critical_warning'].labels(device=nvme['DevicePath'], critical_warning='avail_spare').set(1)
+        else:
+            nvme_smart_gauge['critical_warning'].labels(device=nvme['DevicePath'], critical_warning='avail_spare').set(0)
+
+        if smart_json['critical_warning'] & (1 << 1) :
+            nvme_smart_gauge['critical_warning'].labels(device=nvme['DevicePath'], critical_warning='temp_threshold').set(1)
+        else:
+            nvme_smart_gauge['critical_warning'].labels(device=nvme['DevicePath'], critical_warning='temp_threshold').set(0)
+
+        if smart_json['critical_warning'] & (1 << 2) :
+            nvme_smart_gauge['critical_warning'].labels(device=nvme['DevicePath'], critical_warning='nvm_subsystem_reliability').set(1)
+        else:
+            nvme_smart_gauge['critical_warning'].labels(device=nvme['DevicePath'], critical_warning='nvm_subsystem_reliability').set(0)
+
+        if smart_json['critical_warning'] & (1 << 3) :
+            nvme_smart_gauge['critical_warning'].labels(device=nvme['DevicePath'], critical_warning='read_only').set(1)
+        else:
+            nvme_smart_gauge['critical_warning'].labels(device=nvme['DevicePath'], critical_warning='read_only').set(0)
+
+        if smart_json['critical_warning'] & (1 << 4) :
+            nvme_smart_gauge['critical_warning'].labels(device=nvme['DevicePath'], critical_warning='volatile_backup_failed').set(1)
+        else:
+            nvme_smart_gauge['critical_warning'].labels(device=nvme['DevicePath'], critical_warning='volatile_backup_failed').set(0)
+
+        if smart_json['critical_warning'] & (1 << 5) :
+            nvme_smart_gauge['critical_warning'].labels(device=nvme['DevicePath'], critical_warning='persistent_memory_read_only').set(1)
+        else:
+            nvme_smart_gauge['critical_warning'].labels(device=nvme['DevicePath'], critical_warning='persistent_memory_read_only').set(0)
+
+        #nvme_smart_gauge['critical_warning'].labels(device=nvme['DevicePath'], critical_warning='test').set(smart_json['critical_warning'])
+
         nvme_smart_gauge['temperature'].labels(nvme['DevicePath']).set(smart_json['temperature'])
         nvme_smart_gauge['avail_spare'].labels(nvme['DevicePath']).set(smart_json['avail_spare'])
         nvme_smart_gauge['spare_thresh'].labels(nvme['DevicePath']).set(smart_json['spare_thresh'])

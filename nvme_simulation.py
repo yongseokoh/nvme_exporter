@@ -71,9 +71,9 @@ def gen_simulation_smart_log(devno):
 
     smart_json_data['critical_warning'] = critical_warning
     smart_json_data['temperature'] = 308 + randint(1, 40) - 15
-    smart_json_data['avail_spare'] += (0.01 + randint(1, 10))
-    smart_json_data['spare_thresh'] += (0.01 + randint(1, 10))
-    smart_json_data['percent_used'] += (0.01 + randint(1, 10))
+    smart_json_data['avail_spare'] = (0.01 + randint(1, 100)) % 101
+    smart_json_data['spare_thresh'] = (0.01 + randint(1, 100)) % 101
+    smart_json_data['percent_used'] = (0.01 + randint(1, 100)) % 101
     smart_json_data['data_units_read'] += randint(1, 100000)
     smart_json_data['data_units_written'] += randint(1, 100000)
     smart_json_data['host_read_commands'] += randint(1, 1000)
