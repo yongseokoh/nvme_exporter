@@ -14,6 +14,7 @@ def init_nvme_devices():
         nvme_device = dict()
         nvme_device['info'] = dict()
         nvme_device['smart'] = dict()
+        nvme_device['ctrl'] = dict()
 
         nvme_devices.insert(devno, nvme_device)
 
@@ -21,6 +22,7 @@ def init_nvme_devices():
         print('init_nvme_devices() %d' %devno)
         init_simulation_smart_log(devno)
         init_simulation_device_info(devno)
+        init_simulation_ctrl(devno)
 
 def get_nvme_device_info(devno):
     nvme_device = nvme_devices[devno]
@@ -29,6 +31,41 @@ def get_nvme_device_info(devno):
 def get_nvme_device_smart_log(devno):
     nvme_device = nvme_devices[devno]
     return nvme_device['smart']
+
+def get_nvme_device_ctrl(devno):
+    nvme_device = nvme_devices[devno]
+    return nvme_device['ctrl']
+
+def init_simulation_ctrl(devno):
+    ctrl_json_data = get_nvme_device_ctrl(devno)
+    ctrl_json_data['cap'] = 137606795263
+    ctrl_json_data['vs'] = 66048
+    ctrl_json_data['intms'] = 0
+    ctrl_json_data['intmc'] = 0
+    ctrl_json_data['cc'] = 4587520
+    ctrl_json_data['csts'] = 0
+    ctrl_json_data['nssr'] = 0
+    ctrl_json_data['aqa'] = 2031647
+    ctrl_json_data['asq'] = 8368267264
+    ctrl_json_data['acq'] = 8370688000
+    ctrl_json_data['cmbloc'] = 3
+    ctrl_json_data['cmbsz'] = 3
+    ctrl_json_data['bpinfo'] = 5242883
+    ctrl_json_data['bprsel'] = 4294967295
+    ctrl_json_data['bpmbl'] = 18446744073709551615
+
+def gen_simulation_ctrl(devno):
+    ctrl_json_data = get_nvme_device_ctrl(devno)
+
+    cc_en = randint(0, 1)
+
+    ctrl_json_data['cc'] = 4587520 + cc_en
+    if cc_en == 0:
+        ctrl_json_data['csts'] = 0
+    else:
+        ctrl_json_data['csts'] = randint(0, 1)
+
+    return ctrl_json_data
 
 def init_simulation_smart_log(devno):
 

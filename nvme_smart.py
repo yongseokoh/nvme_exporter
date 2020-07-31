@@ -40,7 +40,7 @@ def get_smart_log(device_path):
 
         json_data = json.loads(stdout)
     else:
-        json_data = nv_simul.gen_simulation_smart_log(0)
+        json_data = nv_simul.gen_simulation_smart_log(int(device_path[9:]))
 
 	#print(type(json_data))
 	#print(json_data)
