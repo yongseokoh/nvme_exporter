@@ -7,6 +7,8 @@ import nvme_simulation as nv_simul
 import random
 import time
 import json
+import os
+import argparse
 
 def init_nvme_ctrl_gauge():
     nvme_ctrl_gauge = dict()
@@ -37,7 +39,7 @@ def init_nvme_smart_gauge():
     nvme_smart_gauge['thm_temp2_trans_count']	= Gauge('nvme_smart_thm_temp2_trans_count'		,'nvme_smart_thm_temp2_trans_count'		 , ['device', 'devno'])
     return nvme_smart_gauge
 
-def gather_nvme_smart_log(nvme_smart_gauge):
+def gather_nvme_smart_log(nvme_smart_gauge, nvme_list_json):
 
     for nvme in nvme_list_json['Devices']:
 
@@ -95,7 +97,7 @@ def gather_nvme_smart_log(nvme_smart_gauge):
         nvme_smart_gauge['thm_temp1_trans_count'].labels(device=nvme['DevicePath'], devno=devno).set(smart_json['thm_temp1_trans_count'])
         nvme_smart_gauge['thm_temp2_trans_count'].labels(device=nvme['DevicePath'], devno=devno).set(smart_json['thm_temp2_trans_count'])
 
-def gather_nvme_ctrl_info(nvme_ctrl_gauge):
+def gather_nvme_ctrl_info(nvme_ctrl_gauge, nvme_list_json):
 
     for nvme in nvme_list_json['Devices']:
 
@@ -113,7 +115,7 @@ def gather_nvme_ctrl_info(nvme_ctrl_gauge):
         else:
             nvme_ctrl_gauge['csts'].labels(device=nvme['DevicePath'], csts='rdy').set(0)
 
-def put_nvme_info():
+def put_nvme_info(nvme_list_json):
 
 	nvme_info = Info('nvme_info', 'Description of NVMe Info', ['device'])
 
@@ -121,21 +123,62 @@ def put_nvme_info():
 		nvme_info.labels(nvme['DevicePath']).info({'ProduceName': nvme['ProductName']})
 		nvme_info.labels(nvme['DevicePath']).info({'ModelNumber': nvme['ModelNumber']})
 
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description='NVME Export port number and update period time'
+    )
+    parser.add_argument(
+        '-p', '--port',
+        required=False,
+        type=int,
+        help='Port to listen',
+        default=int(os.environ.get('PORT', '9243'))
+    )
+    parser.add_argument(
+        '-u', '--update',
+        required=False,
+        help='export mertic update period in seconds',
+        default=os.environ.get('UPDATE_PERIOD', '10')
+    )
+    parser.add_argument(
+        '-s', '--simulation',
+        required=False,
+        help='making use of NVMe simulation',
+        default=os.environ.get('SIMULATION', '0')
+    )
+    return parser.parse_args()
+
+def main():
+
+    try:
+        args = parse_args()
+        #print('port = %d' % int(args.port))
+        #print('update = %d' % int(args.update))
+        #print('simulation = %d' % int(args.simulation))
+
+        nv_simul.NVME_SIMULATION = int(args.simulation)
+
+        # Start up the server to expose the metrics.
+        start_http_server(int(args.port))
+        # Generate some requests.
+
+        if nv_simul.NVME_SIMULATION == 1:
+            nv_simul.init_nvme_devices()
+            #nv_simul.init_simulation_smart_log()
+
+        nvme_list_json = nl.get_nvme_list()
+        put_nvme_info(nvme_list_json)
+        nvme_smart_gauge = init_nvme_smart_gauge()
+        nvme_ctrl_gauge = init_nvme_ctrl_gauge()
+
+        while True:
+            gather_nvme_smart_log(nvme_smart_gauge, nvme_list_json)
+            gather_nvme_ctrl_info(nvme_ctrl_gauge, nvme_list_json)
+            time.sleep(int(args.update))
+
+    except KeyboardInterrupt:
+        print("\nInterrupted")
+        exit(0)
+
 if __name__ == '__main__':
-    # Start up the server to expose the metrics.
-    start_http_server(8000)
-    # Generate some requests.
-
-    if nv_simul.NVME_SIMULATION == 1:
-        nv_simul.init_nvme_devices()
-        #nv_simul.init_simulation_smart_log()
-
-    nvme_list_json = nl.get_nvme_list()
-    put_nvme_info()
-    nvme_smart_gauge = init_nvme_smart_gauge()
-    nvme_ctrl_gauge = init_nvme_ctrl_gauge()
-
-    while True:
-        gather_nvme_smart_log(nvme_smart_gauge)
-        gather_nvme_ctrl_info(nvme_ctrl_gauge)
-        time.sleep(10)
+    main()
