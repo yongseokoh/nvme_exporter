@@ -1,5 +1,7 @@
-# nvme_exporter 
-NVMe SSD exporter for Prometheus
+# nvme_exporter for Prometheus
+:cyclone: **nvme_exporter** provides useful metrics of NVMe SSDs (e.g., lifetime, device status, and read/write operations that are described in NVME specifications [https://nvmexpress.org/](https://nvmexpress.org/)).  The information is obtained from NVMe Admin Commands using the NVMe CLI tool.  
+
+nvme_exporter is written based on the python prometheus client ([https://github.com/prometheus/client_python](https://github.com/prometheus/client_python)) and the NVMe CLI tool ([https://github.com/linux-nvme/nvme-cli](https://github.com/linux-nvme/nvme-cli)).
 
 ## Dependencies
 - `python3.6`
