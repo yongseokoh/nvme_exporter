@@ -132,7 +132,7 @@ def parse_args():
         required=False,
         type=int,
         help='Port to listen',
-        default=int(os.environ.get('PORT', '9243'))
+        default=int(os.environ.get('PORT', '9900'))
     )
     parser.add_argument(
         '-u', '--update',
