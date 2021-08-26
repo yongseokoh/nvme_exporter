@@ -41,7 +41,7 @@ optional arguments:
 
 ### Example
 ```
-sudo python nvme_exporter.py -p 9243 -u 10
+sudo python nvme_exporter.py -p 9900 -u 10
 ```
 
 ## Grafana Sample
