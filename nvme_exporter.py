@@ -151,15 +151,18 @@ def parse_args():
 def main():
 
     try:
-        args = parse_args()
+        port = 9998
+        simulation = 1
+        update_period = 60
+        # args = parse_args()
         #print('port = %d' % int(args.port))
         #print('update = %d' % int(args.update))
         #print('simulation = %d' % int(args.simulation))
 
-        nv_simul.NVME_SIMULATION = int(args.simulation)
+        nv_simul.NVME_SIMULATION = int(simulation)
 
         # Start up the server to expose the metrics.
-        start_http_server(int(args.port))
+        start_http_server(int(port))
         # Generate some requests.
 
         if nv_simul.NVME_SIMULATION == 1:
@@ -174,7 +177,7 @@ def main():
         while True:
             gather_nvme_smart_log(nvme_smart_gauge, nvme_list_json)
             gather_nvme_ctrl_info(nvme_ctrl_gauge, nvme_list_json)
-            time.sleep(int(args.update))
+            time.sleep(int(update_period))
 
     except KeyboardInterrupt:
         print("\nInterrupted")

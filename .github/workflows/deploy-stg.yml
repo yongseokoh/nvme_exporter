@@ -1,0 +1,72 @@
+name: Push to Main - Build and Deploy to Staging Environment
+# Code should be validated in development environment before running this.
+# Code is expected to work and should be ready to push to production if necessary, but may have unexpected bugs.
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  TARGET_ENVIRONMENT: "stg"
+  MANIFEST_REPOSITORY: "edf-re/powerflex_cloud_manifests"
+
+jobs:
+  validate_manifest:
+    name: Run Manifest Validation
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout Service
+        uses: actions/checkout@main
+      - name: Run Manifest Validation
+        run: |
+          make install_validate_manifest
+          make validate_manifest TARGET_ENVIRONMENT=${{ env.TARGET_ENVIRONMENT }}
+
+  deploy-stg:
+    name: Release to Staging Environment
+    runs-on: ubuntu-20.04
+    needs: [validate_manifest]
+    steps:
+      - name: Checkout Service
+        uses: actions/checkout@main
+        with:
+          fetch-depth: 2
+      - id: vars
+        name: Retreive Image ID
+        run: |
+          SHA=$(git rev-parse HEAD^2)
+          echo "::set-output name=sha::$SHA"
+      - name: Checkout Shared Actions
+        uses: actions/checkout@main
+        with:
+          repository: edf-re/ci_tools
+          token: ${{ secrets.GH_TOKEN }}
+          path: .github/edf-re/ci_tools/
+      - name: Deploy
+        uses: ./.github/edf-re/ci_tools/deploy
+        with:
+          image_tag: ${{ steps.vars.outputs.sha }}
+          target_environment: stg
+          manifest_repository: ${{ env.MANIFEST_REPOSITORY }}
+          gh_token: ${{ secrets.GH_TOKEN }}
+
+  notify:
+    name: Notify Chat
+    if: always()
+    runs-on: ubuntu-20.04
+    needs: [deploy-stg]
+    steps:
+      - name: Notification to Slack
+        uses: iRoachie/slack-github-actions@v2.3.0
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Notification to Teams
+        uses: toko-bifrost/ms-teams-deploy-card@3.1.2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          webhook-uri: ${{ secrets.MS_TEAMS_WEBHOOK_URI }}
+          show-on-start: false
+          card-layout-exit: complete
+          show-on-failure: true
